@@ -174,6 +174,7 @@ static void process_sixaxis(struct device_settings settings, const char *mac)
     int br;
     bool msg = true;
     unsigned char buf[128];
+    static unsigned char c = 0;
 
     int last_time_action = get_time();
 
@@ -183,6 +184,7 @@ static void process_sixaxis(struct device_settings settings, const char *mac)
             syslog(LOG_INFO, "Connected 'PLAYSTATION(R)3 Controller (%s)' [Battery %02X]", mac, buf[31]);
             msg = false;
         }
+        syslog(LOG_INFO, "r");
 
         if (settings.timeout.enabled) {
             int current_time = get_time();
@@ -205,6 +207,7 @@ static void process_sixaxis(struct device_settings settings, const char *mac)
                 break;
             }
 
+            syslog(LOG_INFO, "Data processing [%d]", ++c);
             if (settings.joystick.enabled) do_joystick(ufd->js, buf, settings.joystick);
             if (settings.input.enabled) do_input(ufd->mk, buf, settings.input);
 
