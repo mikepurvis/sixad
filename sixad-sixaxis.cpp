@@ -159,23 +159,11 @@ static void rumble_listen()
     pthread_exit((void*)1);
 }
 
-static int get_time()
-{
-  timespec tp;
-  if (!clock_gettime(CLOCK_MONOTONIC, &tp)) {
-    return tp.tv_sec/60;
-  } else {
-    return -1;
-  }
-}
-
 static void process_sixaxis(struct device_settings settings, const char *mac)
 {
     int br;
     bool msg = true;
     unsigned char buf[128];
-
-    int last_time_action = get_time();
 
     sigset_t sigs;
     sigfillset(&sigs);
@@ -193,35 +181,16 @@ static void process_sixaxis(struct device_settings settings, const char *mac)
             msg = false;
         }
 
-        if (settings.timeout.enabled) {
-            int current_time = get_time();
-            if (was_active()) {
-                last_time_action = current_time;
-                set_active(false);
-            } else if (current_time-last_time_action >= settings.timeout.timeout) {
-                syslog(LOG_INFO, "Sixaxis was not in use, and timeout reached, disconneting...");
-                sig_term(0);
-                break;
-            }
-        }
-
         if (br < 0) {
             break;
         } else if (br==50 && buf[0]==0xa1 && buf[1]==0x01 && buf[2]==0x00) { //only continue if we've got a Sixaxis
-            if (settings.auto_disconnect && buf[34] != 0x00 && buf[34] < 0xB5) {
-                syslog(LOG_INFO, "Sixaxis out of reach, auto-disconneting now...");
-                sig_term(0);
-                break;
-            }
-
             if (settings.joystick.enabled) do_joystick(ufd->js, buf, settings.joystick);
             if (settings.input.enabled) do_input(ufd->mk, buf, settings.input);
-
         } else if (br==50 && buf[0]==0xa1 && buf[1]==0x01 && buf[2]==0xff) {
             if (debug) syslog(LOG_ERR, "Got 0xff Sixaxis buffer, ignored");
         } else if (buf[0]==0xa1 && buf[1]==0x01 && buf[2]==0x00) {
-            syslog(LOG_ERR, "Bad Sixaxis buffer (out of battery?), disconneting now...");
-	    sig_term(0);
+            syslog(LOG_ERR, "Bad Sixaxis buffer (out of battery?), disconnecting now...");
+	          sig_term(0);
             break;
         } else {
             if (debug) syslog(LOG_ERR, "Non-Sixaxis packet received and ignored (0x%02x|0x%02x|0x%02x)", buf[0], buf[1], buf[2]);
@@ -229,28 +198,29 @@ static void process_sixaxis(struct device_settings settings, const char *mac)
 
         // Use poll to wait on the bluetooth socket's next packet,
         // in order to enforce a strict timeout.
-        pollfd p;
-        p.events = POLLIN;
-        p.fd = isk;
-        p.revents = 0;
-
-        // Timeout is 250ms.
-        timespec timeout;
-        timeout.tv_sec = 0;
-        timeout.tv_nsec = 250000000;
-
-        if (ppoll(&p, 1, &timeout, &sigs) <= 0)
+        if (settings.safety_timeout.enabled)
         {
-            syslog(LOG_ERR, "Controller connection timed out. Please re-pair.");
+            pollfd p;
+            p.events = POLLIN;
+            p.fd = isk;
+            p.revents = 0;
+            timespec timeout;
+            timeout.tv_sec = 0;
+            timeout.tv_nsec = 1000000 * settings.safety_timeout.timeout_ms;
 
-            // Clear all buttons to zero state and send a final update.
-            buf[3] = buf[4] = buf[5] = 0;
-            if (settings.joystick.enabled) do_joystick(ufd->js, buf, settings.joystick);
-            if (settings.input.enabled) do_input(ufd->mk, buf, settings.input);
+            if (ppoll(&p, 1, &timeout, &sigs) <= 0)
+            {
+                syslog(LOG_ERR, "Controller connection timed out. Please re-pair.");
 
-            // Disconnect.
-            sig_term(0);
-            break;
+                // Clear all buttons to zero state and send a final update.
+                buf[3] = buf[4] = buf[5] = 0;
+                if (settings.joystick.enabled) do_joystick(ufd->js, buf, settings.joystick);
+                if (settings.input.enabled) do_input(ufd->mk, buf, settings.input);
+
+                // Disconnect.
+                sig_term(0);
+                break;
+            }
         }
     }
 
