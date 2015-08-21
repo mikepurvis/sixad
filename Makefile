@@ -10,7 +10,7 @@ ifeq ($(GASIA_GAMEPAD_HACKS),true)
 CXXFLAGS += -DGASIA_GAMEPAD_HACKS
 endif
 
-all: sixad_bins
+all: sixad_bins sixpair_bin
 
 sixad_bins:
 	mkdir -p bins
@@ -19,6 +19,10 @@ sixad_bins:
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) sixad-remote.cpp remote.cpp shared.cpp uinput.cpp textfile.cpp -o bins/sixad-remote -lrt
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) sixad-raw.cpp sixaxis.cpp shared.cpp uinput.cpp textfile.cpp -o bins/sixad-raw
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) sixad-3in1.cpp sixaxis.cpp shared.cpp uinput.cpp textfile.cpp -o bins/sixad-3in1
+
+sixpair_bin:
+	mkdir -p bins
+	$(CC) $(CFLAGS) $(LDFLAGS) sixpair.c -o bins/sixpair `pkg-config --cflags --libs libusb`
 
 clean:
 	rm -f *~ bins/*
@@ -40,6 +44,7 @@ install:
 	install -m 755 bins/sixad-remote $(DESTDIR)/usr/sbin/
 	install -m 755 bins/sixad-3in1 $(DESTDIR)/usr/sbin/
 	install -m 755 bins/sixad-raw $(DESTDIR)/usr/sbin/
+	install -m 755 bins/sixpair $(DESTDIR)/usr/sbin/
 
 	@chmod 777 -R $(DESTDIR)/var/lib/sixad/
 	@echo "Installation is Complete!"

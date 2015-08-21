@@ -6,6 +6,7 @@ to a Linux-compatible machine.
 
 Currently sixad supports:
  - Sixaxis/DualShock3 (buttons, axis, accelerometers, leds and rumble)
+ - PS3 Navigation controller
  - PS3 Keypads
  - PS3 BD Remotes
 
