@@ -174,17 +174,24 @@ static void process_sixaxis(struct device_settings settings, const char *mac)
     int br;
     bool msg = true;
     unsigned char buf[128];
-    static unsigned char c = 0;
 
     int last_time_action = get_time();
 
+    sigset_t sigs;
+    sigfillset(&sigs);
+    sigdelset(&sigs, SIGCHLD);
+    sigdelset(&sigs, SIGPIPE);
+    sigdelset(&sigs, SIGTERM);
+    sigdelset(&sigs, SIGINT);
+    sigdelset(&sigs, SIGHUP);
+
     while (!io_canceled()) {
         br = read(isk, buf, sizeof(buf));
+
         if (msg) {
             syslog(LOG_INFO, "Connected 'PLAYSTATION(R)3 Controller (%s)' [Battery %02X]", mac, buf[31]);
             msg = false;
         }
-        syslog(LOG_INFO, "r");
 
         if (settings.timeout.enabled) {
             int current_time = get_time();
@@ -207,7 +214,6 @@ static void process_sixaxis(struct device_settings settings, const char *mac)
                 break;
             }
 
-            syslog(LOG_INFO, "Data processing [%d]", ++c);
             if (settings.joystick.enabled) do_joystick(ufd->js, buf, settings.joystick);
             if (settings.input.enabled) do_input(ufd->mk, buf, settings.input);
 
@@ -219,6 +225,32 @@ static void process_sixaxis(struct device_settings settings, const char *mac)
             break;
         } else {
             if (debug) syslog(LOG_ERR, "Non-Sixaxis packet received and ignored (0x%02x|0x%02x|0x%02x)", buf[0], buf[1], buf[2]);
+        }
+
+        // Use poll to wait on the bluetooth socket's next packet,
+        // in order to enforce a strict timeout.
+        pollfd p;
+        p.events = POLLIN;
+        p.fd = isk;
+        p.revents = 0;
+
+        // Timeout is 250ms.
+        timespec timeout;
+        timeout.tv_sec = 0;
+        timeout.tv_nsec = 250000000;
+
+        if (ppoll(&p, 1, &timeout, &sigs) <= 0)
+        {
+            syslog(LOG_ERR, "Controller connection timed out. Please re-pair.");
+
+            // Clear all buttons to zero state and send a final update.
+            buf[3] = buf[4] = buf[5] = 0;
+            if (settings.joystick.enabled) do_joystick(ufd->js, buf, settings.joystick);
+            if (settings.input.enabled) do_input(ufd->mk, buf, settings.input);
+
+            // Disconnect.
+            sig_term(0);
+            break;
         }
     }
 
