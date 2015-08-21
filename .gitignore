@@ -3,3 +3,8 @@
 *.o
 *.a
 bins/*
+
+debian/files
+debian/sixad.debhelper.log
+debian/sixad.substvars
+debian/sixad/*
