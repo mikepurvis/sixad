@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Mike Purvis <mike@uwmike.com>
 XSBC-Original-Maintainer: Mike Purvis <mike@uwmike.com>
 Standards-Version: 3.8.4
-Build-Depends: debhelper (>= 7.0), gcc (>= 4.1), libusb-dev, libbluetooth-dev
+Build-Depends: debhelper (>= 7.0), gcc (>= 4.1), pkg-config, libusb-dev, libbluetooth-dev
 
 Package: sixad
 Architecture: any

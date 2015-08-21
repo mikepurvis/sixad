@@ -1,6 +1,19 @@
+sixad (1.6.0~vivid1) vivid; urgency=medium
+
+  * Release to Vivid.
+
+ -- Mike Purvis <mike@uwmike.com>  Fri, 21 Aug 2015 11:39:49 -0400
+
+sixad (1.6.0~trusty2) trusty; urgency=medium
+
+  * Add pkg-config to build depends.
+
+ -- Mike Purvis <mike@uwmike.com>  Fri, 21 Aug 2015 11:23:48 -0400
+
 sixad (1.6.0~trusty1) trusty; urgency=medium
 
   * Added short timeout for bluetooth transmissions.
+  * Remove former 30 min activity timeout.
 
  -- Mike Purvis <mike@uwmike.com>  Fri, 21 Aug 2015 10:26:25 -0400
 
