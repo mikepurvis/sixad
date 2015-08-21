@@ -1,9 +1,5 @@
 *~
-.directory
-
+*.swp
 *.o
 *.a
-*.pro.user
-
 bins/*
-*-build-*
