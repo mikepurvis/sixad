@@ -1,7 +1,14 @@
+Source: sixad
+Section: utils
+Priority: optional
+Maintainer: Mike Purvis <mike@uwmike.com>
+XSBC-Original-Maintainer: Mike Purvis <mike@uwmike.com>
+Standards-Version: 3.8.4
+Build-Depends: debhelper (>= 7.0), gcc (>= 4.1), libusb-dev, libbluetooth-dev
+
 Package: sixad
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, bluez (>= 4.12)
-Build-Depends: libusb-dev
 Description: Daemon for PS3 Bluetooth Controllers
  This package provides the modules (called 'sixad') for connecting PS3 hardware
  (Sixaxis/DualShock3 and Keypads) to a Linux-compatible machine
@@ -12,4 +19,3 @@ Description: Daemon for PS3 Bluetooth Controllers
  .
  sixad also registers the Sixaxis and Keypad's MAC/ID in the joystick name
  (ex: "PLAYSTATION(R)3 Controller (00:XX:X0:0X:XX)".
- .
