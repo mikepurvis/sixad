@@ -17,21 +17,20 @@ fi
 
 bt_device_check () {
 if (which hciconfig > /dev/null); then
-  if (hciconfig dev > /dev/null); then
-    VER=`hciconfig default version | grep "HCI Ver" | awk '{print$3}'`
-    if [ "$VER" == "1.1" ]; then
-      echo "***** NOTICE *****"
-      echo "You're using a very old bluetooth dongle,"
-      echo "the Sixaxis will not work properly!"
-    elif [ "$VER" == "1.0" ]; then
-      echo "***** WARNING *****"
-      echo "You're using a _really_ old bluetooth dongle,"
-      echo "the Sixaxis will just not work!"
-    fi
-  else
-    echo "No bluetooth adapters found on the system!"
-    echo "sixad will now quit"
-    exit
+  while (! hciconfig dev &> /dev/null); do
+    echo "No bluetooth adapters found on the system; will try again in 1 second."
+    sleep 1;
+  done
+
+  VER=`hciconfig default version | grep "HCI Ver" | awk '{print$3}'`
+  if [ "$VER" == "1.1" ]; then
+    echo "***** NOTICE *****"
+    echo "You're using a very old bluetooth dongle,"
+    echo "the Sixaxis will not work properly!"
+  elif [ "$VER" == "1.0" ]; then
+    echo "***** WARNING *****"
+    echo "You're using a _really_ old bluetooth dongle,"
+    echo "the Sixaxis will just not work!"
   fi
 fi
 }
