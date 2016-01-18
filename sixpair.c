@@ -35,6 +35,7 @@
 #define VENDOR 0x054c
 #define PRODUCT_SIXAXIS 0x0268
 #define PRODUCT_NAVIGATION 0x042f
+#define PRODUCT_DS4 0x05c4
 
 #define USB_DIR_IN 0x80
 #define USB_DIR_OUT 0
@@ -130,7 +131,8 @@ int main(int argc, char *argv[]) {
 		++alt ) {
 	    if ( dev->descriptor.idVendor == VENDOR &&
 		 (dev->descriptor.idProduct == PRODUCT_SIXAXIS ||
-		  dev->descriptor.idProduct == PRODUCT_NAVIGATION) &&
+		  dev->descriptor.idProduct == PRODUCT_NAVIGATION ||
+		  dev->descriptor.idProduct == PRODUCT_DS4) &&
 		 alt->bInterfaceClass == 3 ) {
 	      process_device(argc, argv, dev, cfg, itfnum);
 	      ++found;
